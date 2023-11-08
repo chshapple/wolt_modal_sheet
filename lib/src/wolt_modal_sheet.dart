@@ -33,6 +33,7 @@ class WoltModalSheet<T> extends StatefulWidget {
     required this.enableDrag,
     required this.showDragHandle,
     required this.useSafeArea,
+    required this.resizeToAvoidBottomInset,
     this.minDialogWidth,
     this.maxDialogWidth,
     this.minPageHeight,
@@ -51,6 +52,7 @@ class WoltModalSheet<T> extends StatefulWidget {
   final bool? enableDrag;
   final bool? showDragHandle;
   final bool useSafeArea;
+  final bool resizeToAvoidBottomInset;
   final double? minDialogWidth;
   final double? maxDialogWidth;
   final double? minPageHeight;
@@ -69,6 +71,7 @@ class WoltModalSheet<T> extends StatefulWidget {
     Widget Function(Widget)? decorator,
     bool useRootNavigator = false,
     bool? useSafeArea,
+    bool? resizeToAvoidBottomInset,
     bool? barrierDismissible,
     bool? enableDrag,
     bool? showDragHandle,
@@ -93,6 +96,7 @@ class WoltModalSheet<T> extends StatefulWidget {
       decorator: decorator,
       useRootNavigator: useRootNavigator,
       useSafeArea: useSafeArea,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       barrierDismissible: barrierDismissible,
       enableDrag: enableDrag,
       showDragHandle: showDragHandle,
@@ -120,6 +124,7 @@ class WoltModalSheet<T> extends StatefulWidget {
     Widget Function(Widget)? decorator,
     bool useRootNavigator = false,
     bool? useSafeArea,
+    bool? resizeToAvoidBottomInset,
     bool? barrierDismissible,
     bool? enableDrag,
     bool? showDragHandle,
@@ -154,6 +159,7 @@ class WoltModalSheet<T> extends StatefulWidget {
         onModalDismissedWithDrag: onModalDismissedWithDrag,
         transitionAnimationController: transitionAnimationController,
         useSafeArea: useSafeArea,
+        resizeToAvoidBottomInset: resizeToAvoidBottomInset,
         bottomSheetTransitionAnimation: bottomSheetTransitionAnimation,
         dialogTransitionAnimation: dialogTransitionAnimation,
         maxDialogWidth: maxDialogWidth,
@@ -335,6 +341,7 @@ class _WoltModalSheetState extends State<WoltModalSheet> {
               );
               return Scaffold(
                 backgroundColor: Colors.transparent,
+                resizeToAvoidBottomInset: widget.resizeToAvoidBottomInset,
                 body: widget.useSafeArea
                     ? Stack(
                         children: [

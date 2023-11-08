@@ -21,6 +21,7 @@ class WoltModalSheetRoute<T> extends PageRoute<T> {
     bool? enableDrag,
     bool? showDragHandle,
     bool? useSafeArea,
+    bool? resizeToAvoidBottomInset,
     bool? barrierDismissible,
     AnimationController? transitionAnimationController,
     RouteSettings? routeSettings,
@@ -34,6 +35,7 @@ class WoltModalSheetRoute<T> extends PageRoute<T> {
   })  : _enableDrag = enableDrag,
         _showDragHandle = showDragHandle,
         _useSafeArea = useSafeArea ?? true,
+        _resizeToAvoidBottomInset = resizeToAvoidBottomInset ?? true,
         _transitionAnimationController = transitionAnimationController,
         _transitionDuration =
             transitionDuration ?? const Duration(milliseconds: 300),
@@ -68,6 +70,8 @@ class WoltModalSheetRoute<T> extends PageRoute<T> {
   final bool? _showDragHandle;
 
   final bool _useSafeArea;
+
+  final bool _resizeToAvoidBottomInset;
 
   final AnimatedWidget? _bottomSheetTransitionAnimation;
 
@@ -129,6 +133,7 @@ class WoltModalSheetRoute<T> extends PageRoute<T> {
       enableDrag: _enableDrag,
       showDragHandle: _showDragHandle,
       useSafeArea: _useSafeArea,
+      resizeToAvoidBottomInset: _resizeToAvoidBottomInset,
       minDialogWidth: _minDialogWidth,
       maxDialogWidth: _maxDialogWidth,
       minPageHeight: _minPageHeight,
