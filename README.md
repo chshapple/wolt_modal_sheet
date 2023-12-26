@@ -184,6 +184,106 @@ Here is an example that shows all the modal sheet elements in use:
 
 ![Modal sheet elements in use](https://github.com/woltapp/wolt_modal_sheet/blob/main/doc/bottom_sheet_example.jpeg?raw=true)
 
+## Usage of WoltModalSheet Pages
+
+The WoltModalSheet library provides two primary classes for constructing 
+modal sheet pages: `SliverWoltModalSheetPage` and `WoltModalSheetPage`. 
+Understanding the use cases and functionalities of these classes is key to 
+creating performant and easy to construct modal sheets.
+
+### SliverWoltModalSheetPage
+
+`SliverWoltModalSheetPage` is designed for complex and dynamic content 
+layouts within a modal sheet. It leverages the power of Flutter's Sliver 
+widgets to provide flexible and efficient scrolling behaviors.
+
+```dart
+SliverWoltModalSheetPage(
+  mainContentSlivers: [
+    SliverList(
+      delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+        // Your list items
+      }),
+    ),
+    // Other sliver widgets...
+  ],
+  // Additional page elements like pageTitle, topBarTitle, etc.
+)
+```
+
+### WoltModalSheetPage
+WoltModalSheetPage provides a simpler alternative for pages that primarily 
+consist of a single widget or a straightforward layout. It automatically 
+wraps the child widget in a SliverToBoxAdapter, making it suitable for use 
+in sliver-based scrollable layouts.
+
+Key Features:
+* Simplicity: Ideal for single-widget content or basic layouts.
+* No Sliver Overhead: Automatically handles the wrapping of non-sliver 
+  widgets into slivers.
+* Ease of Use: Simplifies the process of creating modal sheet pages without 
+  needing to deal with slivers directly.
+
+ ```dart
+WoltModalSheetPage(
+  child: MyCustomContentWidget(),
+  pageTitle: Text('My Page Title'),
+  // Other properties...
+)
+ ```
+
+### Choosing Between the Two
+* Use `SliverWoltModalSheetPage` when your modal sheet requires complex scrolling behaviors or needs to display a list of items.
+* Choose WoltModalSheetPage for simpler content layouts or when working with 
+  a single widget.
+
+### Migration from 0.1.x to 0.2.0
+
+This section provides detailed guidance on the breaking changes introduced in
+version 0.2.0, particularly focusing on the usage of the `WoltModalSheetPage`
+class.
+
+#### Changes Overview
+
+* The previous constructors `WoltModalSheetPage.withSingleChild` and
+  `WoltModalSheetPage.withCustomSliverList` have been removed in this update.
+* We have introduced a new class, `SliverWoltModalSheetPage`, which now
+  serves as the base class for pages. This new class is intended to replace the
+  `WoltModalSheetPage.withCustomSliverList` constructor.
+* The `WoltModalSheetPage` class has been updated to extend from
+  `SliverWoltModalSheetPage`. This substitutes the `WoltModalSheetPage.
+  withSingleChild` constructor.
+* The `mainContentSlivers` property is now added to
+  `SliverWoltModalSheetPage` to replace the `sliverList` property of
+  `WoltModalSheetPage.withCustomSliverList`. This allows using list of
+  sliver widgets instead of a single sliver list in sliver pages.
+
+#### Migration Steps
+
+* If your previous implementation used `WoltModalSheetPage.withSingleChild`,
+  you can now directly transition to using `WoltModalSheetPage`.
+
+```dart
+// Before
+WoltModalSheetPage.withSingleChild(child: MyWidget());
+
+// After
+WoltModalSheetPage(child: MyWidget());
+```
+
+* If you were utilizing `WoltModalSheetPage.withCustomSliverList` for complex,
+  sliver-based content, switch to `SliverWoltModalSheetPage`. Utilize the
+  `mainContentSlivers` property to achieve a similar but more enhanced
+  functionality.
+
+```dart
+// Before
+WoltModalSheetPage.withCustomSliverList(sliverList: MySliverList());
+
+// After
+SliverWoltModalSheetPage(mainContentSlivers: [MySliverList1(), MySliverList2()]);
+```
+
 ## Getting started
 
 To use this plugin, add wolt_modal_sheet as a dependency in your pubspec.yaml
@@ -201,11 +301,12 @@ using [WoltModalSheetThemeData](./lib/src/theme/wolt_modal_sheet_theme_data.dart
 extension.
 
 ```dart
+@override
 Widget build(BuildContext context) {
   final pageIndexNotifier = ValueNotifier(0);
 
-  WoltModalSheetPage page1(BuildContext modalSheetContext, TextTheme textTheme) {
-    return WoltModalSheetPage.withSingleChild(
+  SliverWoltModalSheetPage page1(BuildContext modalSheetContext, TextTheme textTheme) {
+    return WoltModalSheetPage(
       hasSabGradient: false,
       stickyActionBar: Padding(
         padding: const EdgeInsets.all(_pagePadding),
@@ -253,25 +354,10 @@ Pagination involves a sequence of screens the user navigates sequentially. We ch
     );
   }
 
-  WoltModalSheetPage page2(BuildContext modalSheetContext, TextTheme textTheme) {
-    return WoltModalSheetPage.withCustomSliverList(
-      stickyActionBar: Padding(
-        padding:
-        const EdgeInsets.fromLTRB(_pagePadding, _pagePadding / 4, _pagePadding, _pagePadding),
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.of(modalSheetContext).pop();
-            pageIndexNotifier.value = 0;
-          },
-          child: const SizedBox(
-            height: _buttonHeight,
-            width: double.infinity,
-            child: Center(child: Text('Close')),
-          ),
-        ),
-      ),
+  SliverWoltModalSheetPage page2(BuildContext modalSheetContext, TextTheme textTheme) {
+    return SliverWoltModalSheetPage(
       pageTitle: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: _pagePadding),
+        padding: const EdgeInsets.all(_pagePadding),
         child: Text(
           'Material Colors',
           style: textTheme.headlineMedium!.copyWith(fontWeight: FontWeight.bold),
@@ -296,12 +382,36 @@ Pagination involves a sequence of screens the user navigates sequentially. We ch
           pageIndexNotifier.value = 0;
         },
       ),
-      sliverList: SliverList(
-        delegate: SliverChildBuilderDelegate(
-                  (_, index) => ColorTile(color: allMaterialColors[index]),
-          childCount: allMaterialColors.length,
+      mainContentSlivers: [
+        SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 10.0,
+            crossAxisSpacing: 10.0,
+            childAspectRatio: 2.0,
+          ),
+          delegate: SliverChildBuilderDelegate(
+                    (_, index) => ColorTile(color: materialColorsInGrid[index]),
+            childCount: materialColorsInGrid.length,
+          ),
         ),
-      ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+                    (_, index) => ColorTile(color: materialColorsInSliverList[index]),
+            childCount: materialColorsInSliverList.length,
+          ),
+        ),
+        ...materialColorsInSpinner.map((e) => Shifter(child: ColorTile(color: e))).toList(),
+        SliverPadding(
+          padding: const EdgeInsets.all(_pagePadding),
+          sliver: SliverToBoxAdapter(
+            child: TextButton(
+              onPressed: Navigator.of(modalSheetContext).pop,
+              child: const Text('Close'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -396,7 +506,8 @@ Pagination involves a sequence of screens the user navigates sequentially. We ch
 The code snippet above produces the following:
 </br>
 </br>
-![Example app](https://github.com/woltapp/wolt_modal_sheet/blob/main/doc/example_app_with_theme_extensions.gif?raw=true)
+
+![Example app](https://github.com/woltapp/wolt_modal_sheet/blob/main/doc/example_wms_demo.gif?raw=true)
 
 ### Playground app with imperative navigation
 
@@ -475,21 +586,3 @@ current state:
   guidelines and best practices by showing real-world examples highlighting
   what to do—and what not to do. It also covers the technical details of the
   implementation. The recording of the talk can be found [here](https://www.youtube.com/live/X3bw1pr1kyQ?si=1SielcIbW6rF-4IC&t=4449).
-
-### Contributing
-
-To get started with contributing, please follow the steps below:
-
-1. [Fork the wolt_modal_sheet repo](https://github.com/woltapp/wolt_modal_sheet/fork) on GitHub.
-2. Clone your forked repo locally.
-3. Ensure you have [Melos](https://pub.dev/packages/melos/install) installed.
-   ```bash
-   dart pub global activate melos
-   ```
-4. Use Melos to bootstrap the project.
-   ```bash
-   melos bootstrap
-   ```
-5. Create a new branch from the `main` branch.
-6. Make your changes.
-7. Create a pull request.

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wolt_modal_sheet/src/content/components/main_content/wolt_modal_sheet_hero_image.dart';
 import 'package:wolt_modal_sheet/src/theme/wolt_modal_sheet_default_theme_data.dart';
-import 'package:wolt_modal_sheet/src/utils/drag_scroll_behavior.dart';
 import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 
 /// The main content widget within the scrollable modal sheet.
@@ -11,7 +10,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 class WoltModalSheetMainContent extends StatefulWidget {
   final ValueNotifier<double> currentScrollPosition;
   final GlobalKey pageTitleKey;
-  final WoltModalSheetPage page;
+  final SliverWoltModalSheetPage page;
   final WoltModalType woltModalType;
 
   const WoltModalSheetMainContent({
@@ -45,12 +44,14 @@ class _WoltModalSheetMainContentState extends State<WoltModalSheetMainContent> {
     final page = widget.page;
     final heroImageHeight = page.heroImage == null
         ? 0.0
-        : (widget.page.heroImageHeight ??
+        : (page.heroImageHeight ??
             themeData?.heroImageHeight ??
             defaultThemeData.heroImageHeight);
     final pageHasTopBarLayer = page.hasTopBarLayer ??
         themeData?.hasTopBarLayer ??
         defaultThemeData.hasTopBarLayer;
+    final isTopBarLayerAlwaysVisible =
+        pageHasTopBarLayer && page.isTopBarLayerAlwaysVisible == true;
     final navBarHeight = page.navBarHeight ??
         themeData?.navBarHeight ??
         defaultThemeData.navBarHeight;
@@ -59,28 +60,30 @@ class _WoltModalSheetMainContentState extends State<WoltModalSheetMainContent> {
             page.trailingNavBarWidget != null
         ? navBarHeight
         : 0.0;
-    final singleChildContent = widget.page.singleChildContent;
-    final sliverList = widget.page.sliverList;
     final scrollView = CustomScrollView(
-      scrollBehavior: const DragScrollBehavior(),
       shrinkWrap: true,
-      physics: const ClampingScrollPhysics(),
+      physics: themeData?.mainContentScrollPhysics ??
+          defaultThemeData.mainContentScrollPhysics,
       controller: scrollController,
       slivers: [
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
               if (index == 0) {
-                final heroImage = widget.page.heroImage;
+                final heroImage = page.heroImage;
                 return heroImage != null
                     ? WoltModalSheetHeroImage(
                         topBarHeight: topBarHeight,
                         heroImage: heroImage,
                         heroImageHeight: heroImageHeight,
                       )
-                    : SizedBox(height: topBarHeight);
+                    // If top bar layer is always visible, the padding is explicitly added to the
+                    // scroll view since top bar will not be integrated to scroll view at all.
+                    // Otherwise, we implicitly create a spacing as a part of the scroll view.
+                    : SizedBox(
+                        height: isTopBarLayerAlwaysVisible ? 0 : topBarHeight);
               } else {
-                final pageTitle = widget.page.pageTitle;
+                final pageTitle = page.pageTitle;
                 return KeyedSubtree(
                   key: widget.pageTitleKey,
                   child: pageTitle ?? const SizedBox.shrink(),
@@ -90,20 +93,8 @@ class _WoltModalSheetMainContentState extends State<WoltModalSheetMainContent> {
             childCount: 2,
           ),
         ),
-        (singleChildContent != null
-                ? SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (_, __) => ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(context)
-                            .copyWith(scrollbars: false),
-                        child: singleChildContent,
-                      ),
-                      childCount: 1,
-                    ),
-                  )
-                : sliverList) ??
-            const SizedBox.shrink(),
-        if (widget.page.forceMaxHeight)
+        ...page.mainContentSlivers,
+        if (page.forceMaxHeight)
           const SliverFillRemaining(
             hasScrollBody: false,
             child: SizedBox.shrink(),
@@ -121,7 +112,13 @@ class _WoltModalSheetMainContentState extends State<WoltModalSheetMainContent> {
         }
         return false;
       },
-      child: scrollView,
+      child: Padding(
+        // The scroll view should be padded by the height of the top bar layer if it's always
+        // visible. Otherwise, over scroll effect will not be visible due to the top bar layer.
+        padding:
+            EdgeInsets.only(top: isTopBarLayerAlwaysVisible ? topBarHeight : 0),
+        child: scrollView,
+      ),
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:wolt_modal_sheet/wolt_modal_sheet.dart';
 class SheetPageWithLazyList {
   SheetPageWithLazyList._();
 
-  static WoltModalSheetPage build({
+  static SliverWoltModalSheetPage build({
     required VoidCallback onSabPressed,
     required VoidCallback onBackPressed,
     required VoidCallback onClosed,
@@ -14,14 +14,16 @@ class SheetPageWithLazyList {
     final colors = allMaterialColors;
     const titleText = 'Material Colors';
     const heroImageHeight = 200.0;
-    return WoltModalSheetPage.withCustomSliverList(
-      stickyActionBar: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: WoltElevatedButton(
-          onPressed: onSabPressed,
-          child: Text(isLastPage ? "Close" : "Next"),
-        ),
-      ),
+    return SliverWoltModalSheetPage(
+      stickyActionBar: isLastPage
+          ? null
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: WoltElevatedButton(
+                onPressed: onSabPressed,
+                child: const Text("Next"),
+              ),
+            ),
       topBarTitle: const ModalSheetTopBarTitle(titleText),
       heroImageHeight: heroImageHeight,
       heroImage: Stack(
@@ -37,17 +39,19 @@ class SheetPageWithLazyList {
       leadingNavBarWidget:
           WoltModalSheetBackButton(onBackPressed: onBackPressed),
       trailingNavBarWidget: WoltModalSheetCloseButton(onClosed: onClosed),
-      sliverList: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (_, index) {
-            if (index == 0) {
-              return const _HorizontalPrimaryColorList();
-            }
-            return ColorTile(color: colors[index]);
-          },
-          childCount: colors.length + 1,
-        ),
-      ),
+      mainContentSlivers: [
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, index) {
+              if (index == 0) {
+                return const _HorizontalPrimaryColorList();
+              }
+              return ColorTile(color: colors[index - 1]);
+            },
+            childCount: colors.length + 1,
+          ),
+        )
+      ],
     );
   }
 }
